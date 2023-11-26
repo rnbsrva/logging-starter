@@ -8,23 +8,27 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.util.StopWatch;
 
 
+/**
+ * Aspect for logging the execution time of methods annotated with {@link com.akerke.loggingstarter.common.annotation.EnableLoggerLib}.
+ */
 @Aspect
 @RequiredArgsConstructor
 public class EnableLoggerLibTimeExecutionAspect {
 
-    private final String application;
-
     private final static Logger logger = LoggerFactory.getLogger(EnableLoggerLibTimeExecutionAspect.class);
 
-
+    /**
+     * Logs the execution time of methods annotated with {@link com.akerke.loggingstarter.common.annotation.EnableLoggerLib}.
+     *
+     * @param pjp the proceeding join point representing the intercepted method
+     * @return the result of the intercepted method
+     * @throws Throwable if an error occurs during method execution
+     */
     @Around("@within(com.akerke.loggingstarter.common.annotation.EnableLoggerLib)")
-    public Object logMethodExecutionTime(
-            ProceedingJoinPoint pjp
-    ) throws Throwable {
+    public Object logMethodExecutionTime(ProceedingJoinPoint pjp) throws Throwable {
         var methodSignature = (MethodSignature) pjp.getSignature();
 
         final var stopWatch = new StopWatch();
@@ -36,16 +40,11 @@ public class EnableLoggerLibTimeExecutionAspect {
         var executionTimeLog = ExecutionTimeLog
                 .builder()
                 .method(methodSignature.getName())
-                .app(application)
                 .execution(stopWatch.getLastTaskTimeMillis())
                 .className(methodSignature.getDeclaringType().getSimpleName())
                 .build();
 
-        executionTimeLog.addLogProperties();
-
         logger.info("Log {}", executionTimeLog);
-
-        MDC.clear();
 
         return result;
     }
